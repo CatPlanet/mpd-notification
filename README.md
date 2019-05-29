@@ -66,6 +66,7 @@ or `systemctl --user enable mpd-notification`.
 * *--notification-file-workaround*: write artwork to file for notification
     daemons that do required it
 * *-o*: Notification text is one line (no line breaks)
+* *-x*: eXtra new lines in-between
 * *-p PORT*: connect to *PORT*
 * *-s PIXELS*: scale image to a maximum size *PIXELS* x *PIXELS* pixels, keeping
     ratio
@@ -87,6 +88,7 @@ look like this:
     oneline = true
     scale = 200
     timeout = 20
+    xtra-height = false
 
 Unused options can be commented or removed completely.
 

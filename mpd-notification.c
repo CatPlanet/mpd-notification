@@ -17,6 +17,7 @@ const static struct option options_long[] = {
 	{ "port",	required_argument,	NULL,	'p' },
 	{ "scale",	required_argument,	NULL,	's' },
 	{ "timeout",	required_argument,	NULL,	't' },
+	{ "xtra-height",no_argument,		NULL,	'x' },
 	{ "verbose",	no_argument,		NULL,	'v' },
 	{ "version",	no_argument,		NULL,	'V' },
 	{ "notification-file-workaround",
@@ -31,6 +32,7 @@ struct mpd_connection * conn = NULL;
 uint8_t doexit = 0;
 uint8_t verbose = 0;
 uint8_t oneline = 0;
+uint8_t xtra_height = 0;
 #ifdef HAVE_LIBAV
 	magic_t magic = NULL;
 #endif
@@ -260,6 +262,7 @@ int main(int argc, char ** argv) {
 		notification_timeout = iniparser_getint(ini, ":timeout", notification_timeout);
 		oneline = iniparser_getboolean(ini, ":oneline", oneline);
 		scale = iniparser_getint(ini, ":scale", scale);
+		xtra_height = iniparser_getboolean(ini, ":xtra-height", xtra_height);
 	}
 
 	/* get the verbose status */
@@ -270,6 +273,9 @@ int main(int argc, char ** argv) {
 				break;
 			case 'o':
 				oneline++;
+				break;
+			case 'x':
+				xtra_height++;
 				break;
 			case 'v':
 				verbose++;
@@ -296,7 +302,7 @@ int main(int argc, char ** argv) {
 			" (compiled: " __DATE__ ", " __TIME__ ")\n", program, PROGNAME, VERSION);
 
 	if (help > 0)
-		fprintf(stderr, "usage: %s [-h] [-H HOST] [-m MUSIC-DIR] [-o] [-p PORT] [-s PIXELS] [-t TIMEOUT] [-v] [-V]\n", program);
+		fprintf(stderr, "usage: %s [-h] [-H HOST] [-m MUSIC-DIR] [-o] [-x] [-p PORT] [-s PIXELS] [-t TIMEOUT] [-v] [-V]\n", program);
 
 	if (version > 0 || help > 0)
 		return EXIT_SUCCESS;
@@ -430,11 +436,17 @@ int main(int argc, char ** argv) {
 			notifystr = append_string(notifystr, TEXT_PLAY_PAUSE_STATE, 0, state == MPD_STATE_PLAY ? "": "[Paused]\n");
 			notifystr = append_string(notifystr, TEXT_PLAY_PAUSE_TITLE, 0, title);
 
-			if ((artist = mpd_song_get_tag(song, MPD_TAG_ARTIST, 0)) != NULL)
-				notifystr = append_string(notifystr, TEXT_PLAY_PAUSE_ARTIST, oneline ? ' ' : '\n', artist);
-
-			if ((album = mpd_song_get_tag(song, MPD_TAG_ALBUM, 0)) != NULL)
+			if ((album = mpd_song_get_tag(song, MPD_TAG_ALBUM, 0)) != NULL) {
+				if(xtra_height)
+					notifystr = append_string(notifystr, "", oneline ? ' ' : '\n', "");
 				notifystr = append_string(notifystr, TEXT_PLAY_PAUSE_ALBUM, oneline ? ' ' : '\n', album);
+			}
+
+			if ((artist = mpd_song_get_tag(song, MPD_TAG_ARTIST, 0)) != NULL) {
+                                if(xtra_height)
+					notifystr = append_string(notifystr, "", oneline ? ' ' : '\n', "");
+				notifystr = append_string(notifystr, TEXT_PLAY_PAUSE_ARTIST, oneline ? ' ' : '\n', artist);
+			}
 
 			uri = mpd_song_get_uri(song);
 
